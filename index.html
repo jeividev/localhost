@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html>
+
+    <head>
+        <title>
+            Menu: Server Local
+        </title>
+        <meta charset="UTF-8">
+
+        <style>
+            * {
+                font-family: Arial, Helvetica, sans-serif;
+            }
+
+            body {
+                margin: 0;
+                background-color: #0D262D;
+                color: #fff;
+                height: 100%;
+                padding: 0;
+                margin: 0;
+            }
+
+            header,
+            form,
+            #atalho,
+            #ativas {
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+            }
+
+            form select,
+            form input,
+            form button {
+                box-sizing: border-box;
+                width: 20em;
+                height: 2em;
+                margin: 5px;
+            }
+
+            #atalho>div,
+            #ativas>div {
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+
+                border: solid 2px #fff;
+                ;
+                border-radius: 20px;
+
+                margin-top: 20px;
+                box-sizing: border-box;
+                padding: 10px 10px;
+                width: 17em;
+            }
+
+            #atalho div div,
+            #ativas div div {
+                display: flex;
+                flex-direction: row;
+                align-items: center;
+                margin: 5px;
+            }
+
+            #imgStatus {
+                margin-left: 15px;
+                width: 25px;
+                height: 25px;
+            }
+
+            a {
+                text-decoration: none;
+                color: #fff;
+            }
+
+            #popAlerta {
+                display: flex;
+                flex-direction: row;
+                justify-content: center;
+                align-items: center;
+
+
+                position: fixed;
+                top: 0px;
+                width: 100%;
+                height: 100%;
+                background-color: rgba(0, 0, 0, 0.7);
+            }
+
+            #popAlerta>div {
+                box-sizing: border-box;
+                display: flex;
+                flex-direction: column;
+
+                align-items: center;
+                justify-content: center;
+
+                width: 200px;
+                height: 200px;
+                color: black;
+                background-color: white;
+                border: solid 3px rgb(5, 105, 167);
+                border-radius: 20px;
+            }
+
+            #gridMod {
+                box-sizing: border-box;
+                padding: 0px;
+                margin: 0px;
+                display: grid;
+                width: 100%;
+                width: 200px;
+                height: 200px;
+
+                grid-template-columns: 1fr;
+                grid-template-rows: 1fr 90% 1fr;
+
+            }
+
+            #sairPopAlerta {
+                cursor: pointer;
+                padding: 10px;
+                display: flex;
+                justify-content: flex-end;
+                margin: 10px 15px;
+            }
+
+            #gridMod #mensagem {
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+            }
+
+            #local,
+            #porta {
+                text-align: center;
+            }
+        </style>
+
+    </head>
+
+    <body>
+        <header>
+            <h1>Localhost</h1>
+        </header>
+
+        <form action="">
+            <select id="local">
+                <option value="http://localhost:" data-inputType="number" selected>localhost</option>
+                <option value="http://127.0.0.1:" data-inputType="number">127.0.0.1</option>
+                <option value="https:" data-inputType="text">https</option>
+                <option value="http:" data-inputType="text">http</option>
+
+            </select>
+
+            <input type="number" id="porta">
+
+            <button id="botao">Submit</button>
+        </form>
+
+        <div id="atalho">
+            <div>
+                <div>Atalhos - Portas</div>
+                <div><a href="http://localhost:3030/">Porta: 3030</a></div>
+                <div><a href="http://localhost:5500/">Porta: 5500</a></div>
+                <div><a href="http://localhost:8080/">Porta: 8080</a></div>
+            </div>
+        </div>
+
+    </body>
+    <script>
+
+        function verificarAcesso(url, acesso, erro) {
+            const scriptHost = document.createElement('script')
+
+            scriptHost.type = 'text/javascript'
+            scriptHost.onload = function () { acesso() }
+            scriptHost.onerror = function () { erro() }
+            scriptHost.src = url
+            document.getElementsByTagName('body')[0].appendChild(scriptHost)
+        }
+
+        document.getElementById('botao').onclick = a => {
+            a.preventDefault()
+            const local = document.getElementById('local').value
+            const porta = document.getElementById('porta').value
+            const dir = local + porta + ('/')
+
+            verificarAcesso(
+                dir,
+                () => {
+                    window.location.href = dir
+                },
+                () => {
+                    const popAlerta = `
+                    <div id="popAlerta"> <div> <dir id="gridMod">
+                        <div id="sairPopAlerta">X</div>
+                        <div id="mensagem">
+                            <p>Alerta!!</p> <p>Porta Offline!!</p>
+                        </div>
+                    </dir> </div> </div>`
+
+                    const body = document.getElementsByTagName('body')[0]
+                    body.insertAdjacentHTML("beforeend", popAlerta)
+
+
+                    document.getElementById('sairPopAlerta').onclick = () => {
+                        //const pop = document.getElementById('popAlerta')
+                        const pop = document.querySelectorAll('#popAlerta')[0]
+                        pop.remove()
+                    }
+                })
+        }
+        
+        const opcaoLocal = Array.from(document.querySelector('#local').options)
+
+        document.getElementById('local').onchange = function () {
+            document.querySelectorAll('[data-inputType]').forEach(elemento => {
+                if (elemento.selected) {
+                    document.getElementById('porta').type = elemento.dataset.inputtype
+                }
+            })
+        }
+
+        document.querySelectorAll('#atalho a').forEach(btnPorta => {
+            const imgVerificar = document.createElement('img')
+            imgVerificar.src = './img/alerta amarelo.png'
+            imgVerificar.alt = 'Sem resposta do Status'
+            imgVerificar.id = 'imgStatus'
+
+            btnPorta.onclick = a => a.preventDefault()
+            btnPorta.insertAdjacentElement("afterend", imgVerificar)
+
+            verificarAcesso(
+                btnPorta.href,
+                () => {
+                    btnPorta.classList.add('onAr')
+                    const imgOk = btnPorta.nextElementSibling
+                    imgOk.src = './img/ok.png'
+                    imgOk.alt = 'Porta Online'
+
+                    btnPorta.onclick = a => a.Default()
+                },
+
+                () => {
+                    btnPorta.classList.add('offAr')
+                    const imgOff = btnPorta.nextElementSibling
+                    imgOff.src = './img/alerta.png'
+                    imgOff.alt = 'Porta Offline'
+
+                    btnPorta.onclick = a => a.preventDefault()
+                })
+        })
+
+
+
+    </script>
+
+</html>
